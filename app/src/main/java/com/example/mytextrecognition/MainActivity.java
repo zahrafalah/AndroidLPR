@@ -11,6 +11,7 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,6 +39,17 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     CameraBridgeViewBase cameraBridgeViewBase;
     BaseLoaderCallback baseLoaderCallback;
     int counter = 0;
+    boolean startCanny = false;
+
+    public void Canny(View Button){
+
+        if (startCanny == false){
+            startCanny = true;
+        }
+        else{
+            startCanny = false;
+        }
+    }
 
 //    @Override
 //    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -168,11 +180,19 @@ protected void onCreate(Bundle savedInstanceState) {
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         Mat frame = inputFrame.rgba();
-        if (counter % 2 == 0){
-            Core.flip(frame, frame, 1);
+        // gray scale and
+//        if (counter % 2 == 0){
+//            Core.flip(frame, frame, 1);
+//            Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGBA2GRAY);
+//        }
+//        counter = counter + 1;
+
+        if (startCanny == true) {
+
             Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGBA2GRAY);
+            Imgproc.Canny(frame, frame, 100, 80);
+
         }
-        counter = counter + 1;
         return frame;
     }
 
