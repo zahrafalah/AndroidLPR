@@ -6,7 +6,11 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
@@ -26,7 +30,10 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.dnn.*;
 
 import java.io.IOException;
 
@@ -36,13 +43,19 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 //    CameraSource cameraSource;
 //    final int RequestCameraPermissionId = 1001;
 
+    TextView textView;
+    private static final String TAG = "MyActivity";
     CameraBridgeViewBase cameraBridgeViewBase;
     BaseLoaderCallback baseLoaderCallback;
     int counter = 0;
     boolean startCanny = false;
+    boolean startYolo = false;
+    boolean firstTimeYolo = false;
+    Net tinyYolo;
 
     public void Canny(View Button){
 
+//        Log.i(TAG, String.valueOf(Environment.getExternalStorageDirectory()));
         if (startCanny == false){
             startCanny = true;
         }
@@ -143,12 +156,22 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
+    ActivityCompat.requestPermissions(this,
+            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    Manifest.permission.READ_EXTERNAL_STORAGE},PackageManager.PERMISSION_GRANTED);
 
+    try{
+        String tinyYoloCfg = Environment.getExternalStorageDirectory() + "Downloads/yolov3-tiny.cfg" ;
+        String tinyYoloWeights =  Environment.getExternalStorageDirectory() + "Downloads/yolov3-tiny.weights";
+//        tinyYolo = Dnn.readNetFromDarknet(tinyYoloCfg, tinyYoloWeights);
+
+    }catch(Exception e){
+        e.printStackTrace();
+    }
 
     cameraBridgeViewBase = (JavaCameraView)findViewById(R.id.CameraView);
     cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
     cameraBridgeViewBase.setCvCameraViewListener(this);
-
 
     //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     baseLoaderCallback = new BaseLoaderCallback(this) {
@@ -173,13 +196,15 @@ protected void onCreate(Bundle savedInstanceState) {
 
 
 
-
 }
+
 
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+//        Log.println(Environment.getExternalStorageDirectory());
         Mat frame = inputFrame.rgba();
+
         // gray scale and
 //        if (counter % 2 == 0){
 //            Core.flip(frame, frame, 1);
@@ -187,11 +212,15 @@ protected void onCreate(Bundle savedInstanceState) {
 //        }
 //        counter = counter + 1;
 
+//          Canny
         if (startCanny == true) {
+//            Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGBA2GRAY);
+//            Imgproc.Canny(frame, frame, 100, 80);
 
             Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGBA2GRAY);
-            Imgproc.Canny(frame, frame, 100, 80);
-
+            Mat imageBlob = Dnn.blobFromImage(frame, 0.00392, new Size(416,416),new Scalar(0,0,0), false,false);
+//            tinyYolo.setInput(imageBlob);
+//            tinyYolo.forward();
         }
         return frame;
     }
